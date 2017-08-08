@@ -51,22 +51,33 @@ const __PTR_BYTES_PER_CELL = cellbits / charbits;
 
 // check the pointer is dereferenced or not
 #define PTR_IS_POINTER PTR_IS_POINTER_NO:PTR_IS_POINTER_YES
-#define PTR_IS_POINTER_YES:%8(%1))   _:PTR_PARSE_EXPR:(%1))
 #define PTR_IS_POINTER_NO:%8(%9*%1)) _:PTR_DE_PARSE_EXPR:(%1))
+#define PTR_IS_POINTER_YES:%8(%1))   _:PTR_PARSE_EXPR:(%1))
+
+// parse the arrays access and expressions for the arrays
+#define PTR_PARSE_ARRAY PTR_PARSE_ARRAY_EXPR:PTR_PARSE_ARRAY_GET
+#define PTR_PARSE_ARRAY_GET:%8(%1|||%2|||) (_:(%1)+((%2) * __PTR_BYTES_PER_CELL))
+#define PTR_PARSE_ARRAY_EXPR:%8(%1|||%2|||%3) (_:PTR_DE_PARSE_EXPR:((_:(%1)+((%2) * __PTR_BYTES_PER_CELL))%3))
 
 // parse the expressions for pointers
-#define PTR_PARSE_EXPR PTR_PARSE_SET_PLUS:PTR_PARSE_SET_MINUS:PTR_PARSE_SET_MUL:PTR_PARSE_SET_DIV:PTR_PARSE_SET_MOD:PTR_PARSE_SET:PTR_PARSE_GET
+#define PTR_PARSE_EXPR PTR_PARSE_SET_ARR:PTR_PARSE_SET_APLUS:PTR_PARSE_SET_AMINUS:PTR_PARSE_SET_AMUL:PTR_PARSE_SET_ADIV:PTR_PARSE_SET_AMOD:PTR_PARSE_SET_PLUS:PTR_PARSE_SET_MINUS:PTR_PARSE_SET_MUL:PTR_PARSE_SET_DIV:PTR_PARSE_SET_MOD:PTR_PARSE_SET:PTR_PARSE_GET
 // #define PTR_PARSE_SET_POST_DEC:%8(%1--)     (%1) -= (__PTR_BYTES_PER_CELL)
 // #define PTR_PARSE_SET_POST_INC:%8(%1++)     (%1) += (__PTR_BYTES_PER_CELL)
 // #define PTR_PARSE_SET_PRE_INC:%8(--%1)      (%1) -= (__PTR_BYTES_PER_CELL)
 // #define PTR_PARSE_SET_PRE_INC:%8(++%1)      (%1) += (__PTR_BYTES_PER_CELL)
-#define PTR_PARSE_SET_MOD:%8(%1%=%2)           (%1) %= ((%2) * __PTR_BYTES_PER_CELL)
-#define PTR_PARSE_SET_DIV:%8(%1/=%2)           (%1) /= ((%2) * __PTR_BYTES_PER_CELL)
-#define PTR_PARSE_SET_MUL:%8(%1*=%2)           (%1) *= ((%2) * __PTR_BYTES_PER_CELL)
-#define PTR_PARSE_SET_MINUS:%8(%1-=%2)         (%1) -= ((%2) * __PTR_BYTES_PER_CELL)
-#define PTR_PARSE_SET_PLUS:%8(%1+=%2)          (%1) += ((%2) * __PTR_BYTES_PER_CELL)
-#define PTR_PARSE_SET:%8(%1=%2)                (%1)  = ((%2) * __PTR_BYTES_PER_CELL)
-#define PTR_PARSE_GET:%8(%1)                   (%1)
+#define PTR_PARSE_SET_ARR:%8(%1[%2]%3)        PTR_PARSE_ARRAY:(%1|||%2|||%3)
+#define PTR_PARSE_SET_MOD:%8(%1%%2)           (%1) % ((%2) * __PTR_BYTES_PER_CELL)
+#define PTR_PARSE_SET_DIV:%8(%1/%2)           (%1) / ((%2) * __PTR_BYTES_PER_CELL)
+#define PTR_PARSE_SET_MUL:%8(%1*%2)           (%1) * ((%2) * __PTR_BYTES_PER_CELL)
+#define PTR_PARSE_SET_MINUS:%8(%1-%2)         (%1) - ((%2) * __PTR_BYTES_PER_CELL)
+#define PTR_PARSE_SET_PLUS:%8(%1+%2)          (%1) + ((%2) * __PTR_BYTES_PER_CELL)
+#define PTR_PARSE_SET_AMOD:%8(%1%=%2)         (%1) %= ((%2) * __PTR_BYTES_PER_CELL)
+#define PTR_PARSE_SET_ADIV:%8(%1/=%2)         (%1) /= ((%2) * __PTR_BYTES_PER_CELL)
+#define PTR_PARSE_SET_AMUL:%8(%1*=%2)         (%1) *= ((%2) * __PTR_BYTES_PER_CELL)
+#define PTR_PARSE_SET_AMINUS:%8(%1-=%2)       (%1) -= ((%2) * __PTR_BYTES_PER_CELL)
+#define PTR_PARSE_SET_APLUS:%8(%1+=%2)        (%1) += ((%2) * __PTR_BYTES_PER_CELL)
+#define PTR_PARSE_SET:%8(%1=%2)               (%1)  = (%2)
+#define PTR_PARSE_GET:%8(%1)                  (%1)
 
 // parse the expressions for dereferenced pointers
 #define PTR_DE_PARSE_EXPR PTR_DE_PARSE_SET_PLUS:PTR_DE_PARSE_SET_MINUS:PTR_DE_PARSE_SET_MUL:PTR_DE_PARSE_SET_DIV:PTR_DE_PARSE_SET_MOD:PTR_DE_PARSE_SET:PTR_DE_PARSE_GET
@@ -75,35 +86,39 @@ const __PTR_BYTES_PER_CELL = cellbits / charbits;
 // #define PTR_DE_PARSE_SET_POST_INC:%8(%1++)     Pointer_Set((%1),Pointer_Get(%1)+1),Pointer_Get(%1)
 // #define PTR_DE_PARSE_SET_PRE_DEC:%8(--%1)      Pointer_Set((%1),(__TDW_PTR_INC_DEC_TEMP = Pointer_Get(%1))-1),__TDW_PTR_INC_DEC_TEMP
 // #define PTR_DE_PARSE_SET_PRE_INC:%8(++%1)      Pointer_Set((%1),(__TDW_PTR_INC_DEC_TEMP = Pointer_Get(%1))+1),__TDW_PTR_INC_DEC_TEMP
-#define PTR_DE_PARSE_SET_MOD:%8(%1%=%2)        Pointer_Set((%1),Pointer_Get(%1)%(%2))
-#define PTR_DE_PARSE_SET_DIV:%8(%1/=%2)        Pointer_Set((%1),Pointer_Get(%1)/(%2))
-#define PTR_DE_PARSE_SET_MUL:%8(%1*=%2)        Pointer_Set((%1),Pointer_Get(%1)*(%2))
-#define PTR_DE_PARSE_SET_MINUS:%8(%1-=%2)      Pointer_Set((%1),Pointer_Get(%1)-(%2))
-#define PTR_DE_PARSE_SET_PLUS:%8(%1+=%2)       Pointer_Set((%1),Pointer_Get(%1)+(%2))
-#define PTR_DE_PARSE_SET:%8(%1=%2)             Pointer_Set((%1),(%2))
-#define PTR_DE_PARSE_GET:%8(%1)                Pointer_Get(%1)
+// #define PTR_DE_PARSE_SET_NO_DE:%8(%1(%2)%3)    Pointer_Set(Pointer:(%1),Pointer_Get(Pointer:(%1))%(%2))
+#define PTR_DE_PARSE_SET_MOD:%8(%1%=%2)        Pointer_Set(Pointer:(%1),Pointer_Get(Pointer:(%1))%(%2))
+#define PTR_DE_PARSE_SET_DIV:%8(%1/=%2)        Pointer_Set(Pointer:(%1),Pointer_Get(Pointer:(%1))/(%2))
+#define PTR_DE_PARSE_SET_MUL:%8(%1*=%2)        Pointer_Set(Pointer:(%1),Pointer_Get(Pointer:(%1))*(%2))
+#define PTR_DE_PARSE_SET_MINUS:%8(%1-=%2)      Pointer_Set(Pointer:(%1),Pointer_Get(Pointer:(%1))-(%2))
+#define PTR_DE_PARSE_SET_PLUS:%8(%1+=%2)       Pointer_Set(Pointer:(%1),Pointer_Get(Pointer:(%1))+(%2))
+#define PTR_DE_PARSE_SET:%8(%1=%2)             Pointer_Set(Pointer:(%1),(%2))
+#define PTR_DE_PARSE_GET:%8(%1)                Pointer_Get(Pointer:(%1))
 
 // entry point
 #define @ptr%0\32;%1\10; (PTR_MOVE_EXPR:(%0%1))
 
 
+// Returns the address
 stock ref(...)
 {
 	#emit load.s.pri 12
 	#emit retn
 	return 0;
 }
+// Sets value by the passed address
 stock Pointer_Set(const Pointer:ptr, const val)
 {
 	// in C: *(*ptr) = val
-	#emit load.s.pri val
-	#emit sref.s.pri ptr
+	#emit load.s.pri val  // load the passed value
+	#emit sref.s.pri ptr  // store the value by the address
 	return 0;
 }
+// Gets value by the passed address
 stock Pointer_Get(const Pointer:ptr)
 {
 	// in C: return *(*ptr)
-	#emit lref.s.pri ptr
-	#emit retn
+	#emit lref.s.pri ptr  // get the value by the address
+	#emit retn            // return it
 	return 0;
 }

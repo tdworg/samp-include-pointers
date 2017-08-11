@@ -28,9 +28,9 @@ main()
 	new buff =14;
 	new ist[10];
 	ist[1] = _:ref(buff);
-	new ptr:pointer = ref(ist);
+	new ptr:pp = ref(ist);
 
-	printf("%d", _:@(@(pointer)[1]));
-	@(@(pointer)[1]) = 0;
-	printf("%d", _:@(@(pointer)[1]));
+	printf("%d", _:@(@(pp)[1]));
+	@(@(pp)[1]) = 0;
+	printf("%d", _:@(@(pp)[1]));
 }

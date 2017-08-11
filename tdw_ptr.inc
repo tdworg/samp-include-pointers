@@ -2,6 +2,7 @@
 	Pointers
 
 | Description:
+	This library provides the opportunity to use the pointers in Pawn.
 
 | Version:
 	1.0.0
@@ -42,87 +43,263 @@
 
 #define _TDW_POINTERS
 
-const __PTR_BYTES_PER_CELL = cellbits / charbits;
-new __TDW_PTR_INC_DEC_TEMP;
-#pragma unused __TDW_PTR_INC_DEC_TEMP
+#define pointer@end
+#define pointer@ pointer@assign:pointer@none
+#define pointer@assign:%7(%0)%8pointer@end)%9= (TDW_gPointerAddress = (%0)),deptr:TDW_gPointerValue)%9=
+#define pointer@none:%7(%0)%8pointer@end)      (TDW_gPointerValue = pointer_read((%0))))
 
-// move the expr token (',' or ';') to the end
-#define PTR_MOVE_EXPR PTR_MOVE_EXPR_SEMICOLON:PTR_MOVE_EXPR_COMMA
-#define PTR_MOVE_EXPR_SEMICOLON:%8(%1;%0)) PTR_IS_POINTER:%8(%1));
-#define PTR_MOVE_EXPR_COMMA:%8(%1,%0))     PTR_IS_POINTER:%8(%1)),
+//
+// This is macro for dereferencing pointers.
+//
 
-// check the pointer is dereferenced or not
-#define PTR_IS_POINTER PTR_IS_POINTER_NO:PTR_IS_POINTER_YES
-#define PTR_IS_POINTER_NO:%8(%9*%1)) _:PTR_DE_PARSE_EXPR:(%1))
-#define PTR_IS_POINTER_YES:%8(%1))   _:PTR_PARSE_EXPR:(%1))
+#define @(%1) (_:pointer@assign:pointer@none:(%1) pointer@end)
 
-// parse the arrays access and expressions for the arrays
-#define PTR_PARSE_ARRAY PTR_PARSE_ARRAY_EXPR:PTR_PARSE_ARRAY_GET
-#define PTR_PARSE_ARRAY_GET:%8(%1|||%2|||) (_:(%1)+((%2) * __PTR_BYTES_PER_CELL))
-#define PTR_PARSE_ARRAY_EXPR:%8(%1|||%2|||%3) (_:PTR_DE_PARSE_EXPR:((_:(%1)+((%2) * __PTR_BYTES_PER_CELL))%3))
+//
+// Common constants
+//
 
-// math
-#define PTR_PARSE_EXPR_MATH PTR_PARSE_MATH_MOD:PTR_PARSE_MATH_DIV:PTR_PARSE_MATH_MUL:PTR_PARSE_MATH_MINUS:PTR_PARSE_MATH_PLUS:PTR_PARSE_MATH_NONE
-#define PTR_PARSE_MATH_MOD:%8(%1%%2)           ((%1)) % ((%2) * __PTR_BYTES_PER_CELL)
-#define PTR_PARSE_MATH_DIV:%8(%1/%2)           ((%1)) / ((%2) * __PTR_BYTES_PER_CELL)
-#define PTR_PARSE_MATH_MUL:%8(%1*%2)           ((%1)) * ((%2) * __PTR_BYTES_PER_CELL)
-#define PTR_PARSE_MATH_MINUS:%8(%1-%2)         ((%1)) - ((%2) * __PTR_BYTES_PER_CELL)
-#define PTR_PARSE_MATH_PLUS:%8(%1+%2)          ((%1)) + ((%2) * __PTR_BYTES_PER_CELL)
-#define PTR_PARSE_MATH_NONE:%8(%1)             (%1)
+const ptr:NULL = ptr:0;
 
-// parse the expressions for pointers
-#define PTR_PARSE_EXPR PTR_PARSE_SET_ARR:PTR_PARSE_SET_APLUS:PTR_PARSE_SET_AMINUS:PTR_PARSE_SET_AMUL:PTR_PARSE_SET_ADIV:PTR_PARSE_SET_AMOD:PTR_PARSE_SET_POST_DEC:PTR_PARSE_SET_POST_INC:PTR_PARSE_SET_PRE_DEC:PTR_PARSE_SET_PRE_INC:PTR_PARSE_SET:PTR_PARSE_GET
-#define PTR_PARSE_SET_POST_DEC:%8(%1--)       (%1) -= (__PTR_BYTES_PER_CELL)
-#define PTR_PARSE_SET_POST_INC:%8(%1++)       (%1) += (__PTR_BYTES_PER_CELL)
-#define PTR_PARSE_SET_PRE_DEC:%8(--%1)        ((%1) = (__TDW_PTR_INC_DEC_TEMP = (%1), (%1) - __PTR_BYTES_PER_CELL)), __TDW_PTR_INC_DEC_TEMP
-#define PTR_PARSE_SET_PRE_INC:%8(++%1)        ((%1) = (__TDW_PTR_INC_DEC_TEMP = (%1), (%1) + __PTR_BYTES_PER_CELL)), __TDW_PTR_INC_DEC_TEMP
-#define PTR_PARSE_SET_ARR:%8(%1[%2]%3)        PTR_PARSE_ARRAY:(%1|||%2|||%3)
-#define PTR_PARSE_SET_AMOD:%8(%1%=%2)         (%1) %= ((%2) * __PTR_BYTES_PER_CELL)
-#define PTR_PARSE_SET_ADIV:%8(%1/=%2)         (%1) /= ((%2) * __PTR_BYTES_PER_CELL)
-#define PTR_PARSE_SET_AMUL:%8(%1*=%2)         (%1) *= ((%2) * __PTR_BYTES_PER_CELL)
-#define PTR_PARSE_SET_AMINUS:%8(%1-=%2)       (%1) -= ((%2) * __PTR_BYTES_PER_CELL)
-#define PTR_PARSE_SET_APLUS:%8(%1+=%2)        (%1) += ((%2) * __PTR_BYTES_PER_CELL)
-#define PTR_PARSE_SET:%8(%1=%2)               (%1)  = (%2)
-#define PTR_PARSE_GET:%8(%1)                  (%1)
+stock
+	TDW_gPointerValue,        // used to store the current value.
+	ptr:TDW_gPointerAddress;  // used to store the address pointed to by a pointer.
 
-// parse the expressions for dereferenced pointers
-#define PTR_DE_PARSE_EXPR PTR_DE_PARSE_SET_PLUS:PTR_DE_PARSE_SET_MINUS:PTR_DE_PARSE_SET_MUL:PTR_DE_PARSE_SET_DIV:PTR_DE_PARSE_SET_MOD:PTR_DE_PARSE_SET_POST_DEC:PTR_DE_PARSE_SET_POST_INC:PTR_DE_PARSE_SET_PRE_DEC:PTR_DE_PARSE_SET_PRE_INC:PTR_DE_PARSE_SET:PTR_DE_PARSE_GET
-#define PTR_DE_PARSE_SET_POST_DEC:%8(%1--)     Pointer_Set(Pointer:(%1),Pointer_Get(%1)-1),Pointer_Get(%1)
-#define PTR_DE_PARSE_SET_POST_INC:%8(%1++)     Pointer_Set(Pointer:(%1),Pointer_Get(%1)+1),Pointer_Get(%1)
-#define PTR_DE_PARSE_SET_PRE_DEC:%8(--%1)      Pointer_Set(Pointer:(%1),(__TDW_PTR_INC_DEC_TEMP = Pointer_Get(%1))-1),__TDW_PTR_INC_DEC_TEMP
-#define PTR_DE_PARSE_SET_PRE_INC:%8(++%1)      Pointer_Set(Pointer:(%1),(__TDW_PTR_INC_DEC_TEMP = Pointer_Get(%1))+1),__TDW_PTR_INC_DEC_TEMP
-#define PTR_DE_PARSE_SET_MOD:%8(%1%=%2)        Pointer_Set(Pointer:(%1),Pointer_Get(Pointer:(%1))%(%2))
-#define PTR_DE_PARSE_SET_DIV:%8(%1/=%2)        Pointer_Set(Pointer:(%1),Pointer_Get(Pointer:(%1))/(%2))
-#define PTR_DE_PARSE_SET_MUL:%8(%1*=%2)        Pointer_Set(Pointer:(%1),Pointer_Get(Pointer:(%1))*(%2))
-#define PTR_DE_PARSE_SET_MINUS:%8(%1-=%2)      Pointer_Set(Pointer:(%1),Pointer_Get(Pointer:(%1))-(%2))
-#define PTR_DE_PARSE_SET_PLUS:%8(%1+=%2)       Pointer_Set(Pointer:(%1),Pointer_Get(Pointer:(%1))+(%2))
-#define PTR_DE_PARSE_SET:%8(%1=%2)             Pointer_Set(Pointer:(%1),(%2))
-#define PTR_DE_PARSE_GET:%8(%1)                Pointer_Get(Pointer:(%1))
+//
+// Helper functions.
+//
 
-// entry point
-#define @ptr%0\32;%1\10; (PTR_MOVE_EXPR:(%0%1))
-
-
-// Returns the address
-stock ref(...)
+stock ptr:ref(...)
 {
 	#emit load.s.pri 12
 	#emit retn
-	return 0;
+	return ptr:0;  // make compiler happy.
 }
-// Sets value by the passed address
-stock Pointer_Set(const Pointer:ptr, const val)
+
+stock pointer_read(ptr:address)
 {
-	// in C: *(*ptr) = val
-	#emit load.s.pri val  // load the passed value
-	#emit sref.s.pri ptr  // store the value by the address
-	return 0;
+	#emit lref.s.pri address
+	#emit retn
+	return 0;  // make compiler happy.
 }
-// Gets value by the passed address
-stock Pointer_Get(const Pointer:ptr)
+
+stock pointer_write(ptr:address, ...)
 {
-	// in C: return *(*ptr)
-	#emit lref.s.pri ptr  // get the value by the address
-	#emit retn            // return it
-	return 0;
+	assert(numargs() == 2);
+	#emit load.s.pri 16
+	#emit sref.s.pri address
+	#emit retn
+	return 0;  // make compiler happy.
+}
+
+//
+// Overloaded operators for arithmetic operations on pointers.
+//
+
+// PLUS
+// ============================================================================
+stock ptr:operator+(ptr:left, _:right)
+{
+	#emit load.s.pri left
+	#emit load.s.alt right
+	#emit shl.c.alt 2
+	#emit add
+	#emit retn
+	return ptr:0;  // make compiler happy.
+}
+stock ptr:operator+(ptr:left, ptr:right)
+{
+	#emit load.s.pri left
+	#emit load.s.alt right
+	#emit add
+	#emit retn
+	return ptr:0;  // make compiler happy.
+}
+stock ptr:operator+(_:left, ptr:right)
+{
+	#emit load.s.pri left
+	#emit load.s.alt right
+	#emit shl.c.pri 2
+	#emit add
+	#emit retn
+	return ptr:0;  // make compiler happy.
+}
+
+// MINUS
+// ============================================================================
+stock ptr:operator-(ptr:left, _:right)
+{
+	#emit load.s.pri left
+	#emit load.s.alt right
+	#emit shl.c.alt 2
+	#emit sub
+	#emit retn
+	return ptr:0;  // make compiler happy.
+}
+stock ptr:operator-(ptr:left, ptr:right)
+{
+	#emit load.s.pri left
+	#emit load.s.alt right
+	#emit sub
+	#emit retn
+	return ptr:0;  // make compiler happy.
+}
+stock ptr:operator-(_:left, ptr:right)
+{
+	#emit load.s.pri left
+	#emit load.s.alt right
+	#emit shl.c.pri 2
+	#emit sub
+	#emit retn
+	return ptr:0;  // make compiler happy.
+}
+
+// ASSIGN
+// ============================================================================
+stock ptr:operator=(ptr:val)
+{
+	#emit load.s.pri val
+	#emit retn
+	return ptr:0;  // make compiler happy.
+}
+
+// INCREMENT and DECREMENT
+// ============================================================================
+stock ptr:operator++(ptr:val)
+{
+	#emit load.s.pri val
+	#emit add.c 4
+	#emit retn
+	return ptr:0;  // make compiler happy.
+}
+stock ptr:operator--(ptr:val)
+{
+	#emit load.s.pri val
+	#emit const.alt 4
+	#emit sub
+	#emit retn
+	return ptr:0;  // make compiler happy.
+}
+
+// COMPARATORS: > < >= <= == !=
+// ============================================================================
+stock bool:operator>(ptr:left, _:right)
+{
+	#emit load.s.pri left
+	#emit load.s.alt right
+	#emit grtr
+	#emit retn
+	return false;  // make compiler happy.
+}
+stock bool:operator>(_:left, ptr:right)
+{
+	#emit load.s.pri left
+	#emit load.s.alt right
+	#emit grtr
+	#emit retn
+	return false;  // make compiler happy.
+}
+stock bool:operator<(ptr:left, _:right)
+{
+	#emit load.s.pri left
+	#emit load.s.alt right
+	#emit less
+	#emit retn
+	return false;  // make compiler happy.
+}
+stock bool:operator<(_:left, ptr:right)
+{
+	#emit load.s.pri left
+	#emit load.s.alt right
+	#emit less
+	#emit retn
+	return false;  // make compiler happy.
+}
+stock bool:operator>=(ptr:left, _:right)
+{
+	#emit load.s.pri left
+	#emit load.s.alt right
+	#emit geq
+	#emit retn
+	return false;  // make compiler happy.
+}
+stock bool:operator>=(_:left, ptr:right)
+{
+	#emit load.s.pri left
+	#emit load.s.alt right
+	#emit geq
+	#emit retn
+	return false;  // make compiler happy.
+}
+stock bool:operator<=(ptr:left, _:right)
+{
+	#emit load.s.pri left
+	#emit load.s.alt right
+	#emit leq
+	#emit retn
+	return false;  // make compiler happy.
+}
+stock bool:operator<=(_:left, ptr:right)
+{
+	#emit load.s.pri left
+	#emit load.s.alt right
+	#emit leq
+	#emit retn
+	return false;  // make compiler happy.
+}
+stock bool:operator!=(ptr:left, _:right)
+{
+	#emit load.s.pri left
+	#emit load.s.alt right
+	#emit neq
+	#emit retn
+	return false;  // make compiler happy.
+}
+stock bool:operator!=(_:left, ptr:right)
+{
+	#emit load.s.pri left
+	#emit load.s.alt right
+	#emit neq
+	#emit retn
+	return false;  // make compiler happy.
+}
+stock bool:operator==(ptr:left, _:right)
+{
+	#emit load.s.pri left
+	#emit load.s.alt right
+	#emit eq
+	#emit retn
+	return false;  // make compiler happy.
+}
+stock bool:operator==(_:left, ptr:right)
+{
+	#emit load.s.pri left
+	#emit load.s.alt right
+	#emit eq
+	#emit retn
+	return false;  // make compiler happy.
+}
+
+//
+// Dereferenced pointers.
+//
+
+// ASSIGN
+// ============================================================================
+stock deptr:operator=(_:val)
+{
+	#emit load.s.pri val
+	#emit sref.pri TDW_gPointerAddress
+	return deptr:TDW_gPointerAddress;  // make compiler happy.
+}
+stock deptr:operator=(Float:val)
+{
+	#emit load.s.pri val
+	#emit sref.pri TDW_gPointerAddress
+	return deptr:TDW_gPointerAddress;  // make compiler happy.
+}
+stock deptr:operator=(bool:val)
+{
+	#emit load.s.pri val
+	#emit sref.pri TDW_gPointerAddress
+	return deptr:TDW_gPointerAddress;  // make compiler happy.
 }

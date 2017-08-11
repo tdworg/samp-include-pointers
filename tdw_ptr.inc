@@ -45,15 +45,15 @@
 
 #define pointer@end
 #define pointer@ pointer@array:pointer@assign:pointer@none
-#define pointer@array:%7(%0)%8pointer@end)%5[%6] %7((%0)+(%6))%8pointer@end)%5
-#define pointer@assign:%7(%0)%8pointer@end)%9=   %7(TDW_gPointerAddress = (%0)),deptr:TDW_gPointerValue)%9=
-#define pointer@none:%7(%0)%8pointer@end)        %7(TDW_gPointerValue = pointer_read((%0))))
+#define pointer@array:%7(%0)%8pointer@end)%5[%6] %7(ptr:(%0)+_:(%6))%8pointer@end)%5
+#define pointer@assign:%7(%0)%8pointer@end)%9=   %7(TDW_gPointerValue = _:TDW_gPointerAddress = (%0)),deptr:TDW_gPointerValue)%9=
+#define pointer@none:%7(%0)%8pointer@end)        %7(TDW_gPointerValue = pointer_read(ptr:(%0))))
 
 //
 // This is macro for dereferencing pointers.
 //
 
-#define @(%1) (_:pointer@:(%1) pointer@end)
+#define @(%1) (_:pointer@:(%1)pointer@end)
 
 //
 // Common constants

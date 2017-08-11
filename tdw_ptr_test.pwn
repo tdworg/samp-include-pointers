@@ -24,4 +24,13 @@ main()
 	printf("@(bptr)[1]: %d", @(bptr)[1]);
 	@(bptr)[1] = 14;
 	printf("@(bptr)[1]: %d", @(bptr)[1]);
+
+	new buff =14;
+	new ist[10];
+	ist[1] = _:ref(buff);
+	new ptr:pointer = ref(ist);
+
+	printf("%d", _:@(@(pointer)[1]));
+	@(@(pointer)[1]) = 0;
+	printf("%d", _:@(@(pointer)[1]));
 }
